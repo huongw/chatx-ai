@@ -1,34 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import "./App.css";
+import Form from "./components/Form";
+import ChatContainer from "./components/ChatContainer";
+import axios from "axios";
+import { useState } from "react";
+import generateUniqueId from "./helpers/generateUniqueId";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [input, setInput] = useState("");
+  const [chatLog, setChatLog] = useState([]);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    setChatLog((prev) => [
+      ...prev,
+      { id: generateUniqueId(), user: "human", message: input },
+    ]);
+    setInput("");
+
+    axios
+      .post("http://localhost:5000/", {
+        prompt: input,
+      })
+      .then((res) => {
+        setChatLog((prev) => [
+          ...prev,
+          {
+            id: generateUniqueId(),
+            user: "bot",
+            message: res.data.data.trim(),
+          },
+        ]);
+      });
+  }
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+    <>
+      <ChatContainer chatLog={chatLog} />
+      <Form
+        handleSubmit={handleSubmit}
+        onChange={(e) => setInput(e.target.value)}
+        input={input}
+      />
+    </>
+  );
 }
 
-export default App
+export default App;
